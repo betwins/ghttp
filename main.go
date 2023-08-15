@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"ghttp/model"
 	"github.com/gin-gonic/gin"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 )
@@ -27,7 +27,7 @@ func main() {
 	}
 
 	gin.SetMode(gin.ReleaseMode)
-	gin.DefaultWriter = ioutil.Discard
+	gin.DefaultWriter = io.Discard
 	router := gin.Default()
 	router.GET("/albums", getAlbums)
 	router.GET("/albums/medium", getAlbumsMedium)
