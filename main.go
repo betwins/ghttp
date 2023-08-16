@@ -3,12 +3,19 @@ package main
 import (
 	"flag"
 	"fmt"
+	_ "ghttp/docs"
 	"ghttp/model"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"io"
 	"log"
 	"net/http"
 )
+
+//@title	http-presure-server
+//@version 	1.0.0(ghttp)
+//@description	简易http服务器，用来服务http压力测试
 
 func main() {
 
@@ -23,12 +30,13 @@ func main() {
 	if *host != "" {
 		listenAddr = fmt.Sprintf("%s:%d", *host, *port)
 	} else {
-		listenAddr = fmt.Sprintf("0.0.0.0:%d", *port)
+		listenAddr = fmt.Sprintf("127.0.0.1:%d", *port)
 	}
 
 	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = io.Discard
 	router := gin.Default()
+	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	router.GET("/albums", getAlbums)
 	router.GET("/albums/medium", getAlbumsMedium)
 	router.GET("/albums/bigger", getAlbumsBigger)
@@ -71,6 +79,14 @@ func creaePreusreNoEcho(c *gin.Context) {
 	c.JSON(http.StatusOK, nil)
 }
 
+// getAlbums	godoc
+// @Summary		查询相册列表
+// @Description	查询相册列表
+// @Tags	简易接口
+// @Accept	application/json
+// @Produce json
+// @Success 200 {object} nil
+// @Router /albums [get]
 func getAlbums(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, albums)
 }
