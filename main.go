@@ -84,7 +84,7 @@ func main() {
 	if *bSsl {
 		go func() {
 			var err error
-			err = serverSsl.ListenAndServeTLS("/opt/cert/presure.cert", "/opt/cert/presure.key")
+			err = serverSsl.ListenAndServeTLS("/opt/cert/presure.pem", "/opt/cert/presure.key")
 			if err != nil && err != http.ErrServerClosed {
 				log.Fatalln("HTTPS server listen: {}", err.Error())
 			}
