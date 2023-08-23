@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	_ "ghttp/docs"
@@ -11,7 +12,11 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
+	"time"
 )
 
 //@title	http-presure-server
@@ -20,12 +25,15 @@ import (
 
 func main() {
 
-	log.Println("version 1.0.6")
+	log.Println("version 1.0.7")
 
 	/*	forkPtr := flag.Bool("fork", false, "a bool")*/
 	host := flag.String("h", "", "主机名")
 	port := flag.Int("p", 80, "目标端口号，默认80")
+	bSsl := flag.Bool("ssl", false, "是否启用SSL")
 	flag.Parse()
+
+	log.Println(os.Args[0])
 
 	var listenAddr string
 	if *host != "" {
@@ -56,7 +64,46 @@ func main() {
 	router.POST("/presure", creaePresure)
 	router.POST("/presure/noecho", creaePreusreNoEcho)
 
-	router.Run(listenAddr)
+	server := &http.Server{
+		Addr:    listenAddr,
+		Handler: router,
+	}
+	serverSsl := &http.Server{
+		Addr:    listenAddr,
+		Handler: router,
+	}
+
+	if !*bSsl {
+		go func() {
+			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Fatalln("HTTP server listen: " + err.Error())
+			}
+		}()
+	}
+
+	if *bSsl {
+		go func() {
+			var err error
+			err = serverSsl.ListenAndServeTLS("/opt/cert/presure.cert", "/opt/cert/presure.key")
+			if err != nil && err != http.ErrServerClosed {
+				log.Fatalln("HTTPS server listen: {}", err.Error())
+			}
+		}()
+	}
+
+	// 等待中断信号以优雅地关闭服务器（设置 5 秒的超时时间）
+	signalChan := make(chan os.Signal)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT)
+	sig := <-signalChan
+	log.Println("Get Signal:" + sig.String())
+	log.Println("Shutdown Server")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		log.Println("Server Shutdown err:" + err.Error())
+	}
+	log.Println("Server exit")
 
 }
 
