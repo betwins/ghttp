@@ -138,7 +138,7 @@ func creaePreusreNoEcho(c *gin.Context) {
 // @Tags	简易接口
 // @Accept	application/json
 // @Produce json
-// @Success 200 {object} nil
+// @Success 200 {obj ect} nil
 // @Router /albums [get]
 func getAlbums(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, albums)
